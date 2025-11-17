@@ -86,9 +86,9 @@ while True:
     temp_difference_array.append(current_temp_difference)
     time_stamp_array.append(current_time)
     
-    # Clear the plot
-    ax1.clear()
-    ax2 = ax1.twinx()
+    # Clear the plot - using .cla() instead of .clear() stops the axis from stacking
+    ax1.cla()
+    ax2.cla()   
     
     # Plot the lines and labels for temperature
     ax1.plot(time_stamp_array, temp_difference_array, color="red", label="Temperature difference (°C)")
@@ -99,6 +99,9 @@ while True:
     ax2.plot(time_stamp_array, humidity_array, color="blue", label="Humidity (%)")
     ax2.set_ylabel("Humidity (%)", color="blue")
     ax2.tick_params(axis="y", labelcolor="blue")
+    # To ensure the label stays on the right, we need to run the following two lines
+    ax2.yaxis.set_label_position("right")
+    ax2.yaxis.tick_right()
     
     # Add the label for the time
     ax1.set_xlabel("Time_Stamp")
@@ -110,5 +113,5 @@ while True:
     fig.canvas.draw()
     fig.canvas.flush_events()
     
-    # Wait until next reating
-    time.sleep(10)
+    # Wait until next reading (15 minutes = 900 seconds)
+    time.sleep(900)
