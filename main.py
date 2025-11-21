@@ -63,7 +63,7 @@ def fetch_inside_humidity(dht):
 # ---------------------------------------------------------------------------------------
 
 # Set-up and create the text file
-file_log = datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.txt")
+file_log = "/home/pi/Desktop/SIoT/Logs" + datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.txt")
 
 # Set-up of GPIO 4 to be an input pin from the Temp and Humidity Sensor
 dht = adafruit_dht.DHT11(board.D4)
@@ -86,47 +86,58 @@ while True:
     inside_temp = fetch_inside_temp(dht)
     outside_temp = fetch_outside_temp()
     current_time = datetime.now()
+
+    # Had some errors where the program would crash due to a missing reading so now we need to do a check for them
+    if (
+        current_inside_humidity is None
+        or inside_temp is None
+        or outside_temp is None
+    ):
+        if current_inside_humidity is None:
+            print("Skipping data point due to missing reading - current_inside_humidity")
+        if inside_temp is None:
+            print("Skipping data point due to missing reading - inside_temp")
+        if outside_temp is None:
+            print("Skipping data point due to missing reading - outside_temp")
+        time.sleep(900)  # wait 15 minutes
+        continue # Re-starts the loop
     
     # Calculate the temperature difference
     current_temp_difference = inside_temp - outside_temp
-    
-    # ---------------------------------------------------------------------------------------
-    
-    # Append the values to the array for the graph
+
+    # Append the values to the arrays for the graph
     humidity_array.append(current_inside_humidity)
     temp_difference_array.append(current_temp_difference)
     time_stamp_array.append(current_time)
-    
-    
-    # Clear the plot - using .cla() instead of .clear() stops the axis from stacking
+
+    # Clear the plot - using .cla() instead of .clear() stops stacking
     ax1.cla()
-    ax2.cla()   
-    
-    # Plot the lines and labels for temperature
+    ax2.cla()
+
+    # Plot the temperature difference (left axis, red)
     ax1.plot(time_stamp_array, temp_difference_array, color="red", label="Temperature difference (°C)")
     ax1.set_ylabel("Temperature difference (°C)", color="red")
     ax1.tick_params(axis="y", labelcolor="red")
-    
-    # Plot the lines and labels for humidity
+
+    # Plot humidity (right axis, blue)
     ax2.plot(time_stamp_array, humidity_array, color="blue", label="Humidity (%)")
     ax2.set_ylabel("Humidity (%)", color="blue")
     ax2.tick_params(axis="y", labelcolor="blue")
-    # To ensure the label stays on the right, we need to run the following two lines
     ax2.yaxis.set_label_position("right")
     ax2.yaxis.tick_right()
-    
+
     # Add the label for the time
     ax1.set_xlabel("Time_Stamp")
-    
+
     # Add the title
     ax1.set_title("Humidity and Temperature Difference over Time")
-    
+
     # Update the graph
     fig.canvas.draw()
     fig.canvas.flush_events()
-    
-    # ---------------------------------------------------------------------------------------
-    
+
+    # ----------------------------------------------------------------------
+
     # Log the data on the .txt file
     current_log = f"{current_time.isoformat()}, {current_inside_humidity}, {inside_temp}, {outside_temp}\n"
 
@@ -134,7 +145,7 @@ while True:
     with open(file_log, "a") as f:
         f.write(current_log)
 
-    # ---------------------------------------------------------------------------------------
-    
+    # ----------------------------------------------------------------------
+
     # Wait until next reading (15 minutes = 900 seconds)
     time.sleep(900)
