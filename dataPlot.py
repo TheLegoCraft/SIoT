@@ -26,10 +26,15 @@ def single_log_line_to_variables(line: str):
     timestamp, indoor_humidity, indoor_temperature, outdoor_temperature = [part.strip() for part in split_log_line]
     
     # Coverts the strings to their appropriate format
-    timestamp = datetime.fromisoformat(timestamp)
-    indoor_humidity = float(indoor_humidity)
-    indoor_temperature = float(indoor_temperature)
-    outdoor_temperature = float(outdoor_temperature)
+    try:
+        # Converts the strings to their appropriate format
+        timestamp = datetime.fromisoformat(timestamp)
+        indoor_humidity = float(indoor_humidity)
+        indoor_temperature = float(indoor_temperature)
+        outdoor_temperature = float(outdoor_temperature)
+    except (ValueError, TypeError):
+        # If conversion fails, skip this line
+        return None
     
     # Returns the variables
     return timestamp, indoor_humidity, indoor_temperature, outdoor_temperature
