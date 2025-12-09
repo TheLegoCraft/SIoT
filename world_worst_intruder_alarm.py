@@ -124,6 +124,7 @@ def check_intruder_presence():
     # 80%-85% humidity & temp_diff increasing = 1 intruder in the room
     # 87%+ humidity & temp_diff increasing = 2 intruders in the room
     
+    # Load all the log files (from having to restart the code) and return arrays of all the timestamps, humidity and temperatures
     indoor_humidity_array = []
     indoor_temperature_array = []
     outdoor_temperature_array = []
@@ -135,10 +136,10 @@ def check_intruder_presence():
         print(f"Error reading log files: {e}")
         return 0
     
-    # Read the latest log
+    # Read the latest log and create an array to store the latest_temp_diff
     latest_log = max(log_files, key=os.path.getmtime)
     
-    # Read the last 4 log entries in that file (last hour)
+    # Read the last 4 log entries (last hour)
     with open(latest_log, "r") as f:
         all_lines = f.readlines()
         
@@ -185,7 +186,6 @@ def check_intruder_presence():
 # Send alert email
 def send_email_alert(number_intruder, latest_alert_time):
     
-    # Check that the email hasn't been sent in the last hour
     if latest_alert_time < (datetime.now() - timedelta(hours=1)):
         # Create the email
         msg = EmailMessage()
@@ -194,7 +194,7 @@ def send_email_alert(number_intruder, latest_alert_time):
         msg["Subject"] = "RASPBERRY PI HAS DETECTED INTRUDERS!"
         msg.set_content(f"{number_intruder} intruder(s) have been detected in the room at {datetime.now()}")
 
-        # Connect and send the email
+        # Connect and send
         context = ssl.create_default_context()
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls(context=context)
@@ -208,8 +208,6 @@ def send_email_alert(number_intruder, latest_alert_time):
 # ---------------------------------------------------------------------------------------
 # Main
 
-latest_alert_time = datetime.now()
-
 # This will be running continiously, but still checking for values every 15 minutes.
 while True:
     # Calls the functions to fetch the current values
@@ -218,34 +216,7 @@ while True:
     outside_temp = fetch_outside_temp()
     current_time = datetime.now()
     
-    # Append the values first before reading the log
-    # Had some errors where the program would crash due to a missing reading so now we need to do a check for them
-    if (
-        current_inside_humidity is None
-        or inside_temp is None
-        or outside_temp is None
-    ):
-        if current_inside_humidity is None:
-            print("Skipping data point due to missing reading - current_inside_humidity")
-        if inside_temp is None:
-            print("Skipping data point due to missing reading - inside_temp")
-        if outside_temp is None:
-            print("Skipping data point due to missing reading - outside_temp")
-        time.sleep(900)  # wait 15 minutes
-        continue # Re-starts the loop
+    #Append the values first before reading the log
     
-    # Log the data on the .txt file
-    current_log = f"{current_time.isoformat()}, {current_inside_humidity}, {inside_temp}, {outside_temp}\n"
-
-    # Append it to the file
-    with open(file_log, "a") as f:
-        f.write(current_log)
     
-    # Check for the number of intruders
-    number_of_intruders = check_intruder_presence
-    
-    # Check that the email hasn't been sent in the last hour when sending email by giving it the latest alert time
-    send_email_alert(number_of_intruders)
-    
-    # Wait until next reading (15 minutes = 900 seconds)
-    time.sleep(900)
+    #Check that the email hasn't been sent in the last hour when sending email by giving it the latest alert time
