@@ -30,11 +30,11 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587  # TLS
 
 # Reads the email name and password from the .bash environment
-SENDER_EMAIL = os.environ["$ALERT_EMAIL"]
-SENDER_PASSWORD = os.environ["$ALERT_EMAIL_PASSWORD"]
+SENDER_EMAIL = os.environ["ALERT_EMAIL"]
+SENDER_PASSWORD = os.environ["ALERT_EMAIL_PASSWORD"]
 
 # Set-up and create the text file
-file_log = "/home/pi/Desktop/SIoT/Logs" + datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.txt")
+file_log = "/home/pi/Desktop/SIoT/Logs/" + datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.txt")
 
 # Set-up of GPIO 4 to be an input pin from the Temp and Humidity Sensor
 dht = adafruit_dht.DHT11(board.D4)
@@ -242,10 +242,10 @@ while True:
         f.write(current_log)
     
     # Check for the number of intruders
-    number_of_intruders = check_intruder_presence
+    number_of_intruders = check_intruder_presence()
     
     # Check that the email hasn't been sent in the last hour when sending email by giving it the latest alert time
-    send_email_alert(number_of_intruders)
+    send_email_alert(number_of_intruders, latest_alert_time)
     
     # Wait until next reading (15 minutes = 900 seconds)
     time.sleep(900)
