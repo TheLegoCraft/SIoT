@@ -201,6 +201,8 @@ def send_email_alert(number_intruder, latest_alert_time):
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
         
+        print(f"{number_intruder} intruder(s) have been detected in the room at {datetime.now()}")
+        
         return datetime.now()
     else:
         return latest_alert_time
