@@ -95,7 +95,7 @@ def history():
     if not lines:
         return jsonify({"error": "no data yet"}), 404
     
-    return jsonify(lines)
+    return "\n".join(lines), 200, {"Content-Type": "text/plain"}
 
 
 @app.get("/")
@@ -103,7 +103,7 @@ def root():
     # Simple index with basic info.
     
     return jsonify({
-        "message": "World's Worst Security System - API",
+        "message": "World's Worst Security System - Data API",
         "endpoints": [
             "/latest",
             "/history"
