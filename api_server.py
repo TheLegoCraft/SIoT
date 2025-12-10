@@ -68,7 +68,7 @@ def load_logs_as_lines(pattern: str):
                 timestamp, indoor_humidity, indoor_temperature, outdoor_temperature = parsed
                 
                 # appends a new line to the array
-                log_line_array.append(f"timestamp: {timestamp}, indoor humidity: {indoor_humidity}, indoor temperature: {indoor_temperature}, outdoor temperature {outdoor_temperature}")
+                log_line_array.append(f"time: {timestamp}, hum: {indoor_humidity}, in_temp: {indoor_temperature}, out_temp: {outdoor_temperature}")
         
     # Returns the arrays
     return log_line_array
