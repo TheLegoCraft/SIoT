@@ -26,7 +26,7 @@ from threading import Thread
 # SETUPS
 
 # Set up to find the folder location
-log_folder_location = "/home/pi/Desktop/SIoT/Logs"
+log_folder_location = "/home/pi/Desktop/SIoT/Logs/"
 log_file_name_pattern = os.path.join(log_folder_location, "*.txt") # Helps glob find all the file names
 
 # Connect to the .gmail server and encrypts the connection
@@ -243,6 +243,7 @@ def send_email_alert(number_intruder, latest_alert_time):
 
 # ---------------------------------------------------------------------------------------
 # FLASK API ENDPOINTS & INITIATION
+# bash: curl http://192.168.1.131:5000/
 
 @app.get("/latest")
 def latest():
