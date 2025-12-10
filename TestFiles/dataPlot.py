@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 # Set up to find the folder location
-log_folder_location = "/home/pi/Desktop/SIoT/Logs"
+log_folder_location = "/home/pi/Desktop/SIoT/Logs/"
 log_file_name_pattern = os.path.join(log_folder_location, "*.txt") # Helps glob find all the file names
 
 # ---------------------------------------------------------------------------------------
