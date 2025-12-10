@@ -17,6 +17,10 @@ from email.message import EmailMessage
 # Used to read log files
 import os
 import glob 
+# Flask API
+from flask import Flask, jsonify, request
+# New thread to allow the API and program to run together
+from threading import Thread
 
 # ---------------------------------------------------------------------------------------
 # SETUPS
@@ -43,6 +47,9 @@ dht = adafruit_dht.DHT11(board.D4)
 humidity_array = [] # Empty array to add the humidity values to
 temp_difference_array = [] # Empty array to add the temperature values to
 time_stamp_array = [] # Empty array to add the time stamp values to
+
+# Create the Flask application
+app = Flask(__name__)
 
 # ---------------------------------------------------------------------------------------
 # FUNCTIONS
@@ -118,6 +125,33 @@ def single_log_line_to_variables(line: str):
     
     # Returns the variables
     return timestamp, indoor_humidity, indoor_temperature, outdoor_temperature
+
+def load_logs_as_lines(pattern: str):
+    # Load all the log files (from having to restart the code) and return a structured array of all the timestamps, humidity and temperatures
+    log_line_array = []
+    
+    # Sorts the files in chronological order
+    log_files = sorted(glob.glob(pattern))
+    
+    # Open each log file
+    for filepath in log_files:
+        with open(filepath, "r") as current_file:
+            for line in current_file:
+                # Converts a log line into it's constituent variable
+                parsed = single_log_line_to_variables(line)
+                
+                # If no value is present in that line, it skips it
+                if parsed is None:
+                    continue
+                
+                # Splits the parsed values into it's variables 
+                timestamp, indoor_humidity, indoor_temperature, outdoor_temperature = parsed
+                
+                # appends a new line to the array
+                log_line_array.append(f"time: {timestamp}, hum: {indoor_humidity}, in_temp: {indoor_temperature}, out_temp: {outdoor_temperature}")
+        
+    # Returns the arrays
+    return log_line_array
 
 # Checks how many intruders are in the room
 def check_intruder_presence():
@@ -206,6 +240,54 @@ def send_email_alert(number_intruder, latest_alert_time):
         return datetime.now()
     else:
         return latest_alert_time
+
+# ---------------------------------------------------------------------------------------
+# FLASK API ENDPOINTS & INITIATION
+
+@app.get("/latest")
+def latest():
+    # Returns the latest reading
+    lines = load_logs_as_lines(log_file_name_pattern)
+
+    if not lines:
+        return jsonify({"error": "no data yet"}), 404
+    
+    return jsonify(lines[-1])
+
+
+@app.get("/history")
+def history():
+    # Returns all logs
+    lines = load_logs_as_lines(log_file_name_pattern)
+
+    if not lines:
+        return jsonify({"error": "no data yet"}), 404
+    
+    return "\n".join(lines), 200, {"Content-Type": "text/plain"}
+
+
+@app.get("/")
+def root():
+    # Simple index with basic info.
+    
+    return jsonify({
+        "message": "World's Worst Security System - Data API",
+        "endpoints": [
+            "/latest",
+            "/history"
+        ]
+    })
+
+# Initiation allowing for the api to run in a seperate thread while the rest of the loop continues recording data
+def start_api():
+    # host='0.0.0.0' makes the server visible on your LAN.
+    # port=5000 is the default Flask port.
+    app.run(host="0.0.0.0", port=5000)
+
+# Run the Flask API in a seperate thread
+api_thread = Thread(target=start_api)
+api_thread.daemon = True
+api_thread.start()
 
 # ---------------------------------------------------------------------------------------
 # Main
